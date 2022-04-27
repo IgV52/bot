@@ -139,3 +139,25 @@ MONGO_DB = 'название базы данных'
 python app.py
 ```
 </details>
+
+## <br><b>Обзор бота</b>
+
+### <br><b>Первый запуск:</b>
+
+[![imageup.ru](https://imageup.ru/img62/3927032/vkhod.jpg)](https://imageup.ru/img62/3927032/vkhod.jpg.html)
+
+### <br><b>Регистрация:</b>
+
+[![imageup.ru](https://imageup.ru/img201/3927034/registratsiia.jpg)](https://imageup.ru/img201/3927034/registratsiia.jpg.html)
+
+### <br><b>Разделы:</b>
+
+[![imageup.ru](https://imageup.ru/img96/3927035/razdely.jpg)](https://imageup.ru/img96/3927035/razdely.jpg.html)
+
+### <br><b>Опрос:</b>
+
+[![imageup.ru](https://imageup.ru/img218/3927036/opros.jpg)](https://imageup.ru/img218/3927036/opros.jpg.html)
+
+### <br><b>Тест:</b>
+
+[![imageup.ru](https://imageup.ru/img145/3927037/test.jpg)](https://imageup.ru/img145/3927037/test.jpg.html)
