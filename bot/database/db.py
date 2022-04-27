@@ -1,22 +1,10 @@
 from bot import settings
-
 from pymongo import MongoClient
-from bot.database.utils import check_role
 
 client = MongoClient(settings.MONGO_LINK)
 db = client[settings.MONGO_DB]
 
-def get_or_create_talk(db, file):
-    talk_list = db.talk.find_one({'theme' : file['theme']})
-    if not talk_list:
-        talk_list = {
-            'theme' : file['theme'],
-            'blank_form' : file['blank_form']
-            }
-        db.talk.insert_one(talk_list)
-    return talk_list
-
-def get_or_create_user(db, update):
+def get_or_create_user(db, update, user_name):
     user = db.users.find_one({"user_id" : update.effective_user.id})
     if not user:
         user = {
@@ -26,27 +14,38 @@ def get_or_create_user(db, update):
             "username" : update.effective_user.username,
             "chat_id" : update.message.chat_id,
             "date" : update.message.date,
-            "role" : check_role(update.effective_user.id)
+            "user_name": user_name
         }
         db.users.insert_one(user)
     return user
 
-def get_buttons(db, file):
-    button = db.buttons.find_one('id', file['id'])
-    if not button:
-        button = {
-            "id" : file['id'],
-            "button" : {file['theme'] : 
-            {file['theme_id']: file['num_quest']}}
-        }
-        db.buttons.insert_one(button)
-    db.buttons.replace_one(button, file)
-    return button
+def user_info(db, user_id):
+    user = db.users.find_one({'user_id': user_id})
+    if user:
+        return [True, user['user_name']]
+    return [False]
 
-def info_buttons(db):
-    button = db.buttons.find_one({'id': 1})
+def info_buttons(db, id):
+    button = db.buttons.find_one({'id': id})
     return button['button']
 
-def info_discussion(db, theme):
-    discussion = db.talk.find_one({'theme' : theme})
+def info_discussion(db, section):
+    discussion = db.talk.find_one({'section' : section})
     return discussion
+
+def info_poll(db, section):
+    poll = db.poll.find_one({'section' : section})
+    return poll
+
+def save_data(db, section, theme, answer, user_id):
+    user = db.users.find_one({"user_id" : user_id})
+    if not section in user:
+        db.users.update_one({'_id': user['_id']}, {'$set': {section: [{'theme':theme, 'answer': answer}]}})
+    else:
+        db.users.update_one({'_id': user['_id']}, {'$push': {section: {'theme':theme, 'answer': answer}}})
+
+def user_profile(db, user_id, section, theme):
+    key = section+'.'+'theme'
+    if db.users.find_one({'user_id': user_id, key: theme}):
+        return True
+    return False

@@ -1,2 +1,0 @@
-USER = 'users'
-ADMIN = 'admin'

@@ -1,12 +1,13 @@
 from telegram import ParseMode
-from bot.database.db import db, info_buttons, info_discussion, user_profile, save_data
-from bot.conversation.talk.utils import active_keyboard, key_quest, format_text,static_keyboard
+from bot.database.db import db, info_buttons, info_poll, user_profile, save_data
+from bot.conversation.poll.utils import active_keyboard, format_text, key_quest, static_keyboard
 
-def talk(update, context):
-    context.user_data['button'] = info_buttons(db, 1)
+def poll(update, context):
+    context.user_data['trigger'] = 'poll'
+    context.user_data['button'] = info_buttons(db, 2)
     keyboard = active_keyboard(context.user_data['button'])
     update.message.reply_text(
-        f"Выберите направление.",
+        f"Выберите раздел.",
         reply_markup=keyboard)
     return 'section'
 
@@ -18,10 +19,10 @@ def section(update, context):
         update.message.reply_text("Ошибка. Нажмите доступную кнопку!")
         return 'section'
     else:
-        user_data['info'] = info_discussion(db, msg)
+        user_data['info'] = info_poll(db, msg)
         keyboard = active_keyboard(user_data['button'][msg])
         user_data['section'] = msg
-        update.message.reply_text(f"Выберите тему.",
+        update.message.reply_text(f"Выберите тест.",
         reply_markup=keyboard)
         return 'theme'
 
@@ -38,23 +39,29 @@ def theme(update, context):
         user_data['answer'] = dict()
         user_data['start'] = ['start']
         if user_profile(db,update.effective_user.id,user_data['section'],msg):
-            reply_text("Вы уже проходили этот опрос", 
+            reply_text("Вы уже проходили этот тест", 
             reply_markup=active_keyboard(user_data['button'][user_data['section']]))
             return 'theme'
-        user_data['num'] = key_quest(user_data['info']['form'][msg])
-        reply_text(f"Информация о правилах опроса, если вы готовы отправте боту любое сообщение.")
+        user_data['num'] = key_quest(user_data['info']['form'][msg]['quest'])
+        reply_text(f"Информация о правилах теста, если вы готовы отправте боту любое сообщение.")
         return 'quest'
 
 def quest(update, context):
     user_data = context.user_data
-    question = user_data['info']['form'][user_data['theme']]
+    answer = user_data['info']['form'][user_data['theme']]['answer']
+    button = user_data['button'][user_data['section']][user_data['theme']]
+    question = user_data['info']['form'][user_data['theme']]['quest']
     msg = update.message.text
     reply_text = update.message.reply_text
     if 'start' in user_data:
         del user_data['start']
-        reply_text(format_text(question,user_data['num'][0]), parse_mode=ParseMode.HTML)
+        reply_text(format_text(question,user_data['num'][0],answer),
+        reply_markup=static_keyboard(button), parse_mode=ParseMode.HTML)
         return 'quest'
     else:
+        if msg not in button:
+            update.message.reply_text("Ошибка. Нажмите доступную кнопку!")
+            return 'quest'
         user_data['answer'][user_data['num'][0]] = msg
         del user_data['num'][0]
         if not user_data['num']:
@@ -62,9 +69,10 @@ def quest(update, context):
                     user_data['answer'], update.effective_user.id)
             reply_text("Спасибо за ответы",reply_markup=static_keyboard(['Выход', 'Начало']))
             return 'select'
-        reply_text(format_text(question,user_data['num'][0]), parse_mode=ParseMode.HTML)
+        reply_text(format_text(question,user_data['num'][0],answer),
+        reply_markup=static_keyboard(button), parse_mode=ParseMode.HTML)
         return 'quest'
-
+    
 def dialogue_dontknow(update, context):
     update.message.reply_text("Я вас не понимаю")
 
@@ -77,3 +85,4 @@ def back(update,context):
         context.user_data['trigger'] = 'section'
         update.message.reply_text("Выберите раздел",reply_markup=active_keyboard(context.user_data['button']))
         return 'section'
+    
